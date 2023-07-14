@@ -1,4 +1,4 @@
-package decks
+package cards
 
 import (
 	"embed"
@@ -8,7 +8,7 @@ import (
 )
 
 //go:embed *.txt
-var decks embed.FS
+var cardsFS embed.FS
 
 func Load(name string) ([]string, error) {
 	if cards, ok := LoadInBuilt(name); ok {
@@ -24,7 +24,7 @@ func Load(name string) ([]string, error) {
 }
 
 func LoadInBuilt(name string) ([]string, bool) {
-	data, err := decks.ReadFile(name + ".txt")
+	data, err := cardsFS.ReadFile(name + ".txt")
 	if err != nil {
 		return nil, false
 	}
