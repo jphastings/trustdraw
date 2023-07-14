@@ -106,7 +106,7 @@ func Deal(deck io.Writer, cards []string, dealerPrv ed25519.PrivateKey, playerPu
 }
 
 // shuffle shuffles a slice in-place.
-func shuffle[T interface{}](slice []T) {
+func shuffle(slice []string) {
 	rand.Shuffle(len(slice), func(i, j int) {
 		slice[i], slice[j] = slice[j], slice[i]
 	})

@@ -1,7 +1,6 @@
 package trustdraw
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"encoding/base64"
@@ -13,7 +12,8 @@ import (
 )
 
 func xor(keys ...[]byte) []byte {
-	fullKey := bytes.Clone(keys[0])
+	fullKey := make([]byte, len(keys[0]))
+	copy(fullKey, keys[0])
 	for _, key := range keys[1:] {
 		for i, b := range key {
 			fullKey[i] = fullKey[i] ^ b
