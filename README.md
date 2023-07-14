@@ -10,8 +10,16 @@ go: downloading github.com/jphastings/trustdraw v1.0.0
 
 $ trustdraw deal standard52-fr test_data/dealer.pem test_data/player1.pub.pem test_data/player2.pub.pem > example-game.deal
 
-$ trustdraw verify test_data/dealer.pub.pem example-game.deal
+$ trustdraw verify example-game.deal test_data/dealer.pub.pem
+example-game.deal is a valid deck of 52 cards for 2 players
 
+$ allowKey=$(trustdraw allow-draw example-game.deal test_data/player2.pub.pem)
+Creating example-game.player2.state to hold game state…
+
+$ trustdraw draw example-game.deal test_data/player1.pub.pem $allowKey
+Creating example-game.player1.state to hold game state…
+You drew: 🃓
+Verify with: XAd9kn6ukufqLzjmmgkMig
 ```
 
 ## Protocol

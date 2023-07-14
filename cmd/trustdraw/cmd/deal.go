@@ -17,7 +17,7 @@ import (
 
 // dealCmd represents the deal command
 var dealCmd = &cobra.Command{
-	Use:   "deal",
+	Use:   "deal deck dealerPrivateKey playerPublicKey playerPublicKey…",
 	Short: "Produce a Deal file for the specified players",
 	Long:  `Produces a Deal file that holds all the information needed to hold a trustless game of cards for the players whose public keys afre provided.`,
 	Args:  cobra.MinimumNArgs(4),
@@ -27,14 +27,14 @@ var dealCmd = &cobra.Command{
 			return err
 		}
 
-		dealerPrv, err := cmdhelpers.LoadDealerKey(args[1])
+		dealerPrv, err := cmdhelpers.LoadDealerPrivateKey(args[1])
 		if err != nil {
 			return err
 		}
 
 		playerPubs := make([]*rsa.PublicKey, len(args)-2)
 		for i, arg := range args[2:] {
-			playerPub, err := cmdhelpers.LoadPlayerKey(arg)
+			playerPub, err := cmdhelpers.LoadPlayerPublicKey(arg)
 			if err != nil {
 				return err
 			}
@@ -54,8 +54,9 @@ func init() {
 	rootCmd.AddCommand(dealCmd)
 
 	dealCmd.SetUsageFunc(func(cmd *cobra.Command) error {
-		fmt.Fprintf(os.Stderr, `TrustDraw dealer (v%s)
-Usage: %s <deck> <dealerKey> <playerKey> <playerKey> [<playerKey> …]
+		fmt.Fprintf(os.Stderr, `Usage: %s %s
+
+%s
 
 <deck>      One of the in-build decks (see below), or a path to a text file
             containing a list of 'card' names. They cannot be longer than 16
@@ -81,17 +82,8 @@ In-build decks:
   scrabble-en   An English Scrabble 100 tile set: 12×E 9×A 9×I 8×O etc…
   scrabble-es   A Spanish Scrabble 100 tile set: 12×A 1×CH 1×Ñ etc…
   escarbar      A Latin-American Scrabble 108 tile set: 12×E 3×LL 3×Ñ etc…`,
-			rootCmd.Version, path.Base(os.Args[0]))
+			path.Base(os.Args[0]), cmd.Use, cmd.Long)
 
 		return nil
 	})
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// dealCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// dealCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
 }

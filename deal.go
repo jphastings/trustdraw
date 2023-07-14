@@ -72,7 +72,7 @@ func Deal(deck io.Writer, cards []string, dealerPrv ed25519.PrivateKey, playerPu
 	var sigBytes bytes.Buffer
 	writer := io.MultiWriter(&sigBytes, deck)
 
-	if _, err := fmt.Fprintf(writer, "trustdraw/v%s\n", Version); err != nil {
+	if _, err := fmt.Fprintf(writer, "TrustDraw/v%s\n\n", Version); err != nil {
 		return fmt.Errorf("unable to write the deck to the deal file: %w", err)
 	}
 
@@ -81,8 +81,13 @@ func Deal(deck io.Writer, cards []string, dealerPrv ed25519.PrivateKey, playerPu
 			return fmt.Errorf("unable to write the deck to the deal file: %w", err)
 		}
 	}
+
+	if _, err := fmt.Fprintln(writer); err != nil {
+		return fmt.Errorf("unable to write the deck to the deal file: %w", err)
+	}
+
 	for i, player := range allPlayerData {
-		if _, err := fmt.Fprintf(writer, "\n%s\n", base64.RawStdEncoding.EncodeToString(player)); err != nil {
+		if _, err := fmt.Fprintf(writer, "%s\n", base64.RawStdEncoding.EncodeToString(player)); err != nil {
 			return fmt.Errorf("unable to write player %d's keys to the deal file: %w", i, err)
 		}
 	}

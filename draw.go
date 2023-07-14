@@ -16,6 +16,9 @@ type Deck struct {
 }
 
 func OpenDeck(dealFile io.Reader, playerPrv *rsa.PrivateKey, dealerPub ed25519.PublicKey) (*Deck, error) {
+	if _, _, err := VerifyDeal(dealFile, dealerPub); err != nil {
+		return nil, err
+	}
 	return nil, nil
 }
 
