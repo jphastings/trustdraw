@@ -65,6 +65,34 @@ func LoadDealerPublicKey(path string) (ed25519.PublicKey, error) {
 	return edKey, nil
 }
 
+func LoadPlayerPrivateKey(path string) (*rsa.PrivateKey, error) {
+	pemBytes, err := os.ReadFile(path)
+	if err != nil {
+		return nil, fmt.Errorf("could not read player key (%s): %w", path, err)
+	}
+
+	pemBlock, _ := pem.Decode(pemBytes)
+	if pemBlock == nil {
+		return nil, fmt.Errorf("invalid player PEM file (%s)", path)
+	}
+
+	if pemBlock.Type != "PRIVATE KEY" {
+		return nil, fmt.Errorf("player PEM file (%s) is not a private RSA key", path)
+	}
+
+	key, err := x509.ParsePKCS8PrivateKey(pemBlock.Bytes)
+	if err != nil {
+		return nil, fmt.Errorf("player PEM file (%s) is not a private RSA key", path)
+	}
+
+	rsaKey, ok := key.(*rsa.PrivateKey)
+	if !ok {
+		return nil, fmt.Errorf("player PEM file (%s) is not a private RSA key", path)
+	}
+
+	return rsaKey, nil
+}
+
 func LoadPlayerPublicKey(path string) (*rsa.PublicKey, error) {
 	pemBytes, err := os.ReadFile(path)
 	if err != nil {

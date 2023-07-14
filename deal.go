@@ -18,12 +18,16 @@ const (
 	rsaBits       = 1024
 	aesCipherSize = 16
 	cardLength    = aes.BlockSize
+	maxCards      = 65536
 )
 
 // Deal shuffles a set of 'cards', writing the deal file to the given deck io.Writer.
 // It will contain all the information needed for the players to draw cards as part
 // of a turn-based game without needing any further trust.
 func Deal(deck io.Writer, cards []string, dealerPrv ed25519.PrivateKey, playerPubs ...*rsa.PublicKey) error {
+	if len(cards) > maxCards {
+		return fmt.Errorf("too many cards, max is %d", maxCards)
+	}
 	for _, card := range cards {
 		if len(card) > cardLength {
 			return fmt.Errorf("card '%s' too long, must be %d bytes or fewer", card, cardLength)

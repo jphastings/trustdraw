@@ -5,22 +5,12 @@ import (
 	"encoding/base64"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
 )
 
 func VerifyDeal(dealFile io.Reader, dealerPub ed25519.PublicKey) (int, int, error) {
-	data, err := ioutil.ReadAll(dealFile)
+	stanzas, err := extractStanzas(dealFile)
 	if err != nil {
-		return 0, 0, err
-	}
-
-	stanzas := strings.Split(string(data), "\n\n")
-	if len(stanzas) != 4 {
-		return 0, 0, fmt.Errorf("deal file not valid")
-	}
-
-	if _, err := verifyVersion(stanzas[0]); err != nil {
 		return 0, 0, err
 	}
 
@@ -75,7 +65,7 @@ func verifyPlayers(playerBlock string) (int, error) {
 	players := strings.Split(playerBlock, "\n")
 	for i, player := range players {
 		if _, err := base64.RawStdEncoding.DecodeString(player); err != nil {
-			return 0, fmt.Errorf("player %d is invalid", i+1)
+			return 0, fmt.Errorf("player %d's data is invalid", i+1)
 		}
 	}
 

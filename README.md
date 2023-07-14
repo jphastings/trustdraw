@@ -2,24 +2,40 @@
 
 A protocol for dealing and playing with a shuffled deck of cards in the open, using RSA, AES and Ed25519 encryption.
 
+This protocol does not currently support returning cards to the deck, but will be extended to support it. It will require a further call to the dealer.
+
 ## Try it out
 
 ```sh
+# Install the TrustDraw CLI
 $ go install github.com/jphastings/trustdraw@latest
 go: downloading github.com/jphastings/trustdraw v1.0.0
 
-$ trustdraw deal standard52-fr test_data/dealer.pem test_data/player1.pub.pem test_data/player2.pub.pem > example-game.deal
+# Deal a deck to play with
+$ trustdraw deal standard52-fr test_data/dealer.pem test_data/player1.pub.pem test_data/player2.pub.pem > example.deal
 
-$ trustdraw verify example-game.deal test_data/dealer.pub.pem
-example-game.deal is a valid deck of 52 cards for 2 players
+# Verify that the deck was created by the dealer to prevent cheating
+$ trustdraw verify example.deal test_data/dealer.pub.pem
+example.deal is a valid deck of 52 cards for 2 players
 
-$ allowKey=$(trustdraw allow-draw example-game.deal test_data/player2.pub.pem)
+# As Player 2, get an allowKey, to allow Player 1 to draw a card
+$ trustdraw allow-draw example.deal test_data/player2.pem 1
 Creating example-game.player2.state to hold game state…
+Your allowKey: BABFpJBzhiVJwMonZIDVDjk4
 
-$ trustdraw draw example-game.deal test_data/player1.pub.pem $allowKey
+# As Player 1, use the allowKey given by Player 2 to draw a card
+$ trustdraw draw example.deal test_data/player1.pem BABFpJBzhiVJwMonZIDVDjk4
 Creating example-game.player1.state to hold game state…
 You drew: 🃓
-Verify with: XAd9kn6ukufqLzjmmgkMig
+Prove with: AACH+oA5nhR+JoulasCyHrmv
+
+# As Player 2, when Player 1 plays 🃓, verify that they really drew that card
+$ trustdraw verify-draw example.deal test_data/player2.pem 🃓 AACH+oA5nhR+JoulasCyHrmv
+✅ This was a valid draw
+
+# Demonstrate that a cheating draw is detectable
+$ trustdraw verify-draw example.deal test_data/player2.pem 🂱 AACH+oA5nhR+JoulasCyHrmv
+❌ This was not a valid draw
 ```
 
 ## Protocol
