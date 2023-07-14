@@ -7,7 +7,6 @@ import (
 	"encoding/binary"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"strings"
 )
 
@@ -25,7 +24,7 @@ func xor(keys ...[]byte) []byte {
 // extractStanzas splits a deal file into its 4 stanzas, verifying that the declared
 // version is one this code can read.
 func extractStanzas(dealFile io.Reader) ([]string, error) {
-	data, err := ioutil.ReadAll(dealFile)
+	data, err := io.ReadAll(dealFile)
 	if err != nil {
 		return nil, err
 	}
