@@ -16,7 +16,7 @@ $ trustdraw deal standard52-fr test_data/dealer.pem test_data/player1.pub.pem te
 
 # Verify that the deck was created by the dealer to prevent cheating
 $ trustdraw verify example.deal test_data/dealer.pub.pem
-example.deal is a valid deck of 52 cards for 2 players
+✅ example.deal is a valid deck of 52 cards for 2 players
 
 # As Player 2, get an allowKey, to allow Player 1 to draw a card
 $ trustdraw allow-draw example.deal test_data/player2.pem 1

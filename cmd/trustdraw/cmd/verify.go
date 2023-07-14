@@ -30,10 +30,11 @@ var verifyCmd = &cobra.Command{
 
 		cards, players, err := trustdraw.VerifyDeal(deal, key)
 		if err != nil {
-			return fmt.Errorf("%s is not a valid deal file: %v", args[0], err)
+			_, _ = fmt.Fprintf(os.Stderr, "❌ %s is not a valid deal file: %v\n", args[0], err)
+			os.Exit(1)
 		}
 
-		_, _ = fmt.Fprintf(os.Stderr, "%s is a valid deck of %d cards for %d players\n", args[0], cards, players)
+		_, _ = fmt.Printf("✅ %s is a valid deck of %d cards for %d players\n", args[0], cards, players)
 		return nil
 	},
 }

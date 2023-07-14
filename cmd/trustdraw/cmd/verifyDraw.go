@@ -39,9 +39,10 @@ var verifyDrawCmd = &cobra.Command{
 		}
 
 		if valid {
-			fmt.Println("✅ This was a valid draw")
+			_, _ = fmt.Fprintf(os.Stdout, "✅ This was a valid draw\n")
 		} else {
-			fmt.Println("❌ This was not a valid draw")
+			_, _ = fmt.Fprintf(os.Stderr, "❌ This was not a valid draw\n")
+			os.Exit(1)
 		}
 
 		return nil
