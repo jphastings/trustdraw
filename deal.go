@@ -29,6 +29,16 @@ func Deal(deck io.Writer, cards []string, dealerPrv ed25519.PrivateKey, playerPu
 			return fmt.Errorf("card '%s' too long, must be %d bytes or fewer", card, cardLength)
 		}
 	}
+	if len(playerPubs) < 2 {
+		return fmt.Errorf("two or more player keys are needed")
+	}
+	for i, pub := range playerPubs {
+		if pub.Size() < rsaBits/8 {
+			return fmt.Errorf(
+				"player %d's key is too small (%d bits), must be at least %d bits",
+				i+1, pub.Size()*8, rsaBits)
+		}
+	}
 
 	deckData := make([][]byte, len(cards))
 	allPlayerData := make([][]byte, len(playerPubs))
