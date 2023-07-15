@@ -1,8 +1,11 @@
 package trustdraw
 
 import (
+	"errors"
 	"fmt"
 )
+
+var ErrNoCardsLeft = errors.New("no cards left to draw")
 
 // AllowDraw retrieves the allowKey for that will allow the specified player to draw a card.
 // An allowKey contains 2 bytes of card ID, followed by 16 bytes of the card's AES key.
@@ -20,25 +23,28 @@ func (g *Game) AllowDraw(intended PlayerNumber) (string, error) {
 		return toAllowKey(cardID, secretCard), nil
 	}
 
-	return "", fmt.Errorf("no cards left to draw")
+	return "", ErrNoCardsLeft
 }
 
 // Draw uses the allowKeys shared by other players to draw the relevant card.
-func (g *Game) Draw(allowKeys ...string) (string, string, error) {
+func (g *Game) Draw(allowKeys ...string) (card string, allowKey string, alreadyDrawn bool, error error) {
 	if len(allowKeys) != g.Players-1 {
-		return "", "", fmt.Errorf("wrong number of allowKeys (%d needed, %d given)", g.Players, len(allowKeys))
+		return "", "", false, fmt.Errorf("wrong number of allowKeys (%d needed, %d given)", g.Players, len(allowKeys))
 	}
 	cardID, cardKey, err := g.allowKeysToCardKey(allowKeys)
 	if err != nil {
-		return "", "", fmt.Errorf("could not re-create card key: %w", err)
+		return "", "", false, fmt.Errorf("could not re-create card key: %w", err)
 	}
 
-	card, err := g.decryptCard(cardID, cardKey)
+	card, err = g.decryptCard(cardID, cardKey)
 	if err != nil {
-		return "", "", fmt.Errorf("could not decrypt card: %w", err)
+		return "", "", false, fmt.Errorf("could not decrypt card: %w", err)
 	}
 
-	return card, toAllowKey(cardID, g.keys[cardID]), nil
+	alreadyDrawn = g.state[cardID] != 0
+	g.state[cardID] = g.playerNumber
+
+	return card, toAllowKey(cardID, g.keys[cardID]), alreadyDrawn, nil
 }
 
 func (g *Game) VerifyDraw(testCard string, allowKeys ...string) (bool, error) {

@@ -7,6 +7,8 @@ import (
 	"encoding/pem"
 	"fmt"
 	"os"
+	"path"
+	"strings"
 )
 
 func LoadDealerPrivateKey(path string) (ed25519.PrivateKey, error) {
@@ -119,4 +121,36 @@ func LoadPlayerPublicKey(path string) (*rsa.PublicKey, error) {
 	}
 
 	return rsaKey, nil
+}
+
+// StateFile returns a default name for the state file of a game/player combination
+func StateFile(explicit, dealFilePath, playerKeyPath string) string {
+	if explicit != "" {
+		return explicit
+	}
+
+	deal := strings.SplitN(path.Base(dealFilePath), ".", 2)
+	player := strings.SplitN(path.Base(playerKeyPath), ".", 2)
+
+	return fmt.Sprintf("%s.%s.state", deal[0], player[0])
+}
+
+func ReadOrMake(path string) (string, error) {
+	info, err := os.Stat(path)
+	if os.IsNotExist(err) {
+		file, err := os.Create(path)
+		if err != nil {
+			return "", err
+		}
+		return "", file.Close()
+	} else if err != nil {
+		return "", err
+	}
+
+	if info.Mode().Perm()&0200 == 0 {
+		return "", fmt.Errorf("the path (%s) is not writeable", path)
+	}
+
+	data, err := os.ReadFile(path)
+	return string(data), err
 }

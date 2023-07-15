@@ -30,7 +30,13 @@ var allowDrawCmd = &cobra.Command{
 			return err
 		}
 
-		game, err := trustdraw.OpenGame(deal, playerPrv, []trustdraw.PlayerNumber{1, 2, 1, 2})
+		stateFile := cmdhelpers.StateFile(cmd.Flag("state").Value.String(), args[0], args[1])
+		state, err := cmdhelpers.ReadOrMake(stateFile)
+		if err != nil {
+			return fmt.Errorf("the statefile was not writeable: %w", err)
+		}
+
+		game, err := trustdraw.OpenGame(deal, playerPrv, state)
 		if err != nil {
 			return err
 		}
@@ -44,8 +50,14 @@ var allowDrawCmd = &cobra.Command{
 		}
 
 		allowKey, err := game.AllowDraw(trustdraw.PlayerNumber(intendedPlayer))
-		if err != nil {
-			return fmt.Errorf("could not allow card to be drawn: %w", err)
+		if err == trustdraw.ErrNoCardsLeft {
+			_, _ = fmt.Fprintf(os.Stderr, "❌ There are no cards left to draw\n")
+		} else if err != nil {
+			return fmt.Errorf("could not get allowKey: %w", err)
+		}
+
+		if err := os.WriteFile(stateFile, []byte(game.State()), 0600); err != nil {
+			return fmt.Errorf("could not save game state: %w", err)
 		}
 
 		fmt.Print(allowKey)

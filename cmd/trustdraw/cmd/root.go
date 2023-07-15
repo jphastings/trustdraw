@@ -28,4 +28,5 @@ func Execute() {
 }
 
 func init() {
+	rootCmd.PersistentFlags().String("state", "", "Path to the game state file to use")
 }

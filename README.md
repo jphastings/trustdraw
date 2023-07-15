@@ -26,7 +26,7 @@ Your allowKey: BABFpJBzhiVJwMonZIDVDjk4
 # As Player 1, use the allowKey given by Player 2 to draw a card
 $ trustdraw draw example.deal test_data/player1.pem BABFpJBzhiVJwMonZIDVDjk4
 Creating example-game.player1.state to hold game state…
-You drew: 🃓
+You drew: 3♦️
 Prove with: AACH+oA5nhR+JoulasCyHrmv
 
 # As Player 2, when Player 1 plays 🃓, verify that they really drew that card

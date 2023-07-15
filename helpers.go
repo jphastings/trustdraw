@@ -1,12 +1,17 @@
 package trustdraw
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
+	crand "crypto/rand"
+	"crypto/rsa"
+	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
 	"io"
+	"math/rand"
 	"strings"
 )
 
@@ -94,4 +99,100 @@ func (g *Game) decryptCard(cardID int, cardKey cipher.Block) (string, error) {
 	cardKey.Decrypt(card, g.cards[cardID])
 
 	return strings.Trim(string(card), "\x00"), nil
+}
+
+// decryptCardKeys decrypts the given card key block with the given player's RSA public key.
+func decryptCardKeys(playerData []byte, prv *rsa.PrivateKey, cardCount int) ([][]byte, error) {
+	encAESKey := playerData[:rsaBits/8]
+	cipherText := playerData[rsaBits/8:]
+
+	aesKey, err := rsa.DecryptOAEP(sha256.New(), crand.Reader, prv, encAESKey, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	blk, err := aes.NewCipher(aesKey)
+	if err != nil {
+		return nil, err
+	}
+
+	plainText := make([]byte, len(cipherText))
+	stream := cipher.NewCTR(blk, cipherText[:aes.BlockSize])
+	stream.XORKeyStream(plainText, cipherText[aes.BlockSize:])
+
+	keys := make([][]byte, len(plainText)/aesCipherSize)
+
+	var j int
+	for i := 0; i < len(plainText); i += aesCipherSize {
+		j += aesCipherSize
+		// do what do you want to with the sub-slice, here just printing the sub-slices
+		keys[i/aesCipherSize] = plainText[i:j]
+	}
+
+	return keys[0:cardCount], nil
+}
+
+// shuffle shuffles a slice in-place.
+func shuffle(slice []string) {
+	rand.Shuffle(len(slice), func(i, j int) {
+		slice[i], slice[j] = slice[j], slice[i]
+	})
+}
+
+// encryptCard encrypts a card using the given AES cipher block.
+func encryptCard(card string, blk cipher.Block) []byte {
+	encCard := make([]byte, cardLength)
+	// Pad the card name with zero bytes, if necessary.
+	plainText := append([]byte(card), make([]byte, aes.BlockSize-len(card))...)
+	blk.Encrypt(encCard, plainText)
+	return encCard
+}
+
+// generateCardKeys generates one AES key for each player, and the AES cipher block derived from the XOR of all of them.
+func generateCardKeys(n int) ([][]byte, cipher.Block, error) {
+	playerKeys := make([][]byte, n)
+	for i := range playerKeys {
+		key := make([]byte, aesCipherSize)
+		if _, err := crand.Read(key); err != nil {
+			return nil, nil, err
+		}
+		playerKeys[i] = key
+	}
+
+	blk, err := aes.NewCipher(xor(playerKeys...))
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return playerKeys, blk, nil
+}
+
+// encryptCardKeys encrypts the given card keys for one player's eyes only, using the given RSA public key.
+func encryptCardKeys(cardKeys [][]byte, pub *rsa.PublicKey) ([]byte, error) {
+	plain := bytes.Join(cardKeys, nil)
+
+	aesKey := make([]byte, aesCipherSize)
+	if _, err := crand.Read(aesKey); err != nil {
+		return nil, err
+	}
+	blk, err := aes.NewCipher(aesKey)
+	if err != nil {
+		return nil, err
+	}
+
+	cipherText := make([]byte, aes.BlockSize+len(plain))
+	iv := cipherText[:aes.BlockSize]
+	if _, err := io.ReadFull(crand.Reader, iv); err != nil {
+		return nil, err
+	}
+
+	stream := cipher.NewCTR(blk, iv)
+	stream.XORKeyStream(cipherText[aes.BlockSize:], plain)
+
+	asymKey, err := rsa.EncryptOAEP(sha256.New(), crand.Reader, pub, aesKey, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	return append(asymKey, cipherText...), nil
 }

@@ -78,7 +78,7 @@ The dealer must publish their public key for the players to trust the deck:
 
 In-build decks:
 
-  standard52-fr A French-suited standard 52 card deck of cards: 🃑 🃒 🃓 etc…
+  standard52-fr A French-suited standard 52 card deck of cards: 3♣️ 2♥️ K♦️ etc…
   scrabble-en   An English Scrabble 100 tile set: 12×E 9×A 9×I 8×O etc…
   scrabble-es   A Spanish Scrabble 100 tile set: 12×A 1×CH 1×Ñ etc…
   escarbar      A Latin-American Scrabble 108 tile set: 12×E 3×LL 3×Ñ etc…`,

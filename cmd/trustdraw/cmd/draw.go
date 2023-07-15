@@ -28,17 +28,31 @@ var drawCmd = &cobra.Command{
 			return err
 		}
 
-		game, err := trustdraw.OpenGame(deal, playerPrv, []trustdraw.PlayerNumber{1, 2, 1, 2})
+		stateFile := cmdhelpers.StateFile(cmd.Flag("state").Value.String(), args[0], args[1])
+		state, err := cmdhelpers.ReadOrMake(stateFile)
+		if err != nil {
+			return fmt.Errorf("the statefile was not writeable: %w", err)
+		}
+
+		game, err := trustdraw.OpenGame(deal, playerPrv, state)
 		if err != nil {
 			return err
 		}
 
-		card, allowKey, err := game.Draw(args[2:]...)
+		card, allowKey, alreadyDrawn, err := game.Draw(args[2:]...)
 		if err != nil {
 			return err
 		}
 
-		fmt.Printf("You drew: %s\nProve with: %s\n", card, allowKey)
+		if err := os.WriteFile(stateFile, []byte(game.State()), 0600); err != nil {
+			return fmt.Errorf("could not save game state: %w", err)
+		}
+
+		verb := "have drawn"
+		if alreadyDrawn {
+			verb = "previously drew"
+		}
+		fmt.Printf("You %s: %s\nProve with: %s\n", verb, card, allowKey)
 		return nil
 	},
 }

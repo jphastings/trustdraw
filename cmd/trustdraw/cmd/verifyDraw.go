@@ -28,7 +28,13 @@ var verifyDrawCmd = &cobra.Command{
 			return err
 		}
 
-		game, err := trustdraw.OpenGame(deal, playerPrv, []trustdraw.PlayerNumber{1, 2, 1, 2})
+		stateFile := cmdhelpers.StateFile(cmd.Flag("state").Value.String(), args[0], args[1])
+		state, err := cmdhelpers.ReadOrMake(stateFile)
+		if err != nil {
+			return fmt.Errorf("the statefile was not writeable: %w", err)
+		}
+
+		game, err := trustdraw.OpenGame(deal, playerPrv, state)
 		if err != nil {
 			return err
 		}
