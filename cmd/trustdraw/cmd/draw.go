@@ -29,9 +29,12 @@ var drawCmd = &cobra.Command{
 		}
 
 		stateFile := cmdhelpers.StateFile(cmd.Flag("state").Value.String(), args[0], args[1])
-		state, err := cmdhelpers.ReadOrMake(stateFile)
+		state, stateFileMade, err := cmdhelpers.ReadOrMake(stateFile)
 		if err != nil {
 			return fmt.Errorf("the statefile was not writeable: %w", err)
+		}
+		if stateFileMade {
+			_, _ = fmt.Fprintf(os.Stderr, "Creating %s to hold game state…\n", stateFile)
 		}
 
 		game, err := trustdraw.OpenGame(deal, playerPrv, state)

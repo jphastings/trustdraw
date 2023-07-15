@@ -135,22 +135,22 @@ func StateFile(explicit, dealFilePath, playerKeyPath string) string {
 	return fmt.Sprintf("%s.%s.state", deal[0], player[0])
 }
 
-func ReadOrMake(path string) (string, error) {
+func ReadOrMake(path string) (string, bool, error) {
 	info, err := os.Stat(path)
 	if os.IsNotExist(err) {
 		file, err := os.Create(path)
 		if err != nil {
-			return "", err
+			return "", false, err
 		}
-		return "", file.Close()
+		return "", true, file.Close()
 	} else if err != nil {
-		return "", err
+		return "", false, err
 	}
 
 	if info.Mode().Perm()&0200 == 0 {
-		return "", fmt.Errorf("the path (%s) is not writeable", path)
+		return "", false, fmt.Errorf("the path (%s) is not writeable", path)
 	}
 
 	data, err := os.ReadFile(path)
-	return string(data), err
+	return string(data), false, err
 }
